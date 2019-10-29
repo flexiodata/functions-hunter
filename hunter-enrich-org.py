@@ -23,7 +23,7 @@
 #     * `domain`: domain name of the organization
 #     * `first_name`: first name of the person
 #     * `last_name`: last name of the person
-#     * `email`: email address of the person
+#     * `email`: email address of the person (default)
 #     * `email_disposable`: true if this is an domain address from a disposable domain service
 #     * `email_webmail`: true if we find this is an domain from a webmail, for example Gmail
 #     * `email_score`: estimation of the probability the email address returned is correct

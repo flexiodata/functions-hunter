@@ -3,7 +3,7 @@
 # name: hunter-verify-email
 # deployed: true
 # title: Hunter Email Verification
-# description: Return email delivery verification and confidence score
+# description: Return email delivery verification and confidence score.
 # params:
 #   - name: email
 #     type: string
@@ -89,7 +89,10 @@ def flexio_handler(flex):
 
         # see here for more info:
         # https://hunter.io/api/docs#email-verifier
-        url_query_params = {'email': input['email'], 'api_key': auth_token}
+        url_query_params = {
+            'email': input['email'],
+            'api_key': auth_token
+        }
         url_query_str = urllib.parse.urlencode(url_query_params)
         url = 'https://api.hunter.io/v2/email-verifier?' + url_query_str
 

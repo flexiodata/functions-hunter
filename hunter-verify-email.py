@@ -12,7 +12,6 @@
 #   - name: properties
 #     type: array
 #     description: The properties to return (defaults to 'score'). See "Notes" for a listing of the available properties.
-#     default_value: '"score"'
 #     required: false
 # examples:
 #   - '"steli@close.io"'
@@ -36,6 +35,7 @@
 import json
 import requests
 import itertools
+import urllib
 from datetime import *
 from cerberus import Validator
 from collections import OrderedDict
@@ -89,7 +89,9 @@ def flexio_handler(flex):
 
         # see here for more info:
         # https://hunter.io/api/docs#email-verifier
-        url = 'https://api.hunter.io/v2/email-verifier?email=' + input['email'] + '&api_key=' + auth_token
+        url_query_params = {'email': input['email'], 'api_key': auth_token}
+        url_query_str = urllib.parse.urlencode(url_query_params)
+        url = 'https://api.hunter.io/v2/email-verifier?' + url_query_str
 
         # get the response data as a JSON object
         response = requests.get(url)

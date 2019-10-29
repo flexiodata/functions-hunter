@@ -12,7 +12,7 @@
 #   - name: properties
 #     type: array
 #     description: The properties to return (defaults to 'score'). See "Notes" for a listing of the available properties.
-#     default_value: '"score"'`
+#     default_value: '"score"'
 #     required: false
 # examples:
 #   - '"steli@close.io"'

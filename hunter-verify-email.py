@@ -40,19 +40,6 @@ from datetime import *
 from cerberus import Validator
 from collections import OrderedDict
 
-properties_map = OrderedDict()
-properties_map['score'] = 'score'
-properties_map['status'] = 'result'
-properties_map['regexp'] = 'regexp'
-properties_map['autogen'] = 'gibberish'
-properties_map['disposable'] = 'disposable'
-properties_map['webmail'] = 'webmail'
-properties_map['mx_records'] = 'mx_records'
-properties_map['smtp_server'] = 'smtp_server'
-properties_map['smtp_check'] = 'smtp_check'
-properties_map['smtp_check_blocked'] = 'block'
-properties_map['smtp_accept_all'] = 'accept_all'
-
 # main function entry point
 def flexio_handler(flex):
 
@@ -102,17 +89,27 @@ def flexio_handler(flex):
         content = content.get('data', {})
 
         # map this function's property names to the API's property names
-        properties_iter = map(lambda prop : properties_map.get(prop, ''), input['properties'])
+        properties = [p.lower().strip() for p in input['properties']]
+        property_map = {
+            'score': content.get('score', ''),
+            'status': content.get('result', ''),
+            'regexp': content.get('regexp', ''),
+            'autogen': content.get('gibberish', ''),
+            'disposable': content.get('disposable', ''),
+            'webmail': content.get('webmail', ''),
+            'mx_records': content.get('mx_records', ''),
+            'smtp_server': content.get('smtp_server', ''),
+            'smtp_check': content.get('smtp_check', ''),
+            'smtp_check_blocked': content.get('block', ''),
+            'smtp_accept_all': content.get('accept_all', '')
+        }
+
+        # map this function's property names to the API's property names
+        properties_iter = map(lambda prop : property_map.get(prop, ''), properties)
         properties_list = list(properties_iter)
 
-        # uncomment the following lines to debug the property name mapping
-        # flex.output.content_type = "application/json"
-        # flex.output.write(debug_properties_map())
-        # return
-
         # limit the results to the requested properties
-        properties = [c.lower().strip() for c in properties_list]
-        result = [[content.get(c,'') for c in properties]]
+        result = [properties_list]
 
         # return the results
         result = json.dumps(result, default=to_string)

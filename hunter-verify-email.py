@@ -20,17 +20,17 @@
 #   - '"steli@close.io", "score, status, autogen, disposable"'
 # notes: |
 #   The following properties are available:
-#     * `score` - the deliverability score of the email address
-#     * `status` - "deliverable", "undeliverable", "risky"
-#     * `regexp` - true if the email address passes a regular expression test
-#     * `autogen` - true if this is an automatically generated email address
-#     * `disposable` - true if this is an email address from a disposable email service
-#     * `webmail` - true if we find this is an email from a webmail, for example Gmail
-#     * `mx_records` - true if MX records exist on the domain of the given email address
-#     * `smtp_server` - true if connecting to the SMTP server was successful
-#     * `smtp_check` - true if the email address doesn't bounce
-#     * `smtp_check_blocked` - true if the SMTP server prevented the STMP check
-#     * `smtp_accept_all` - true if the SMTP server accepts all the email addresses; this can result in false positives on SMTP checks
+#     * `score :` the deliverability score of the email address
+#     * `status :` "deliverable", "undeliverable", "risky"
+#     * `regexp :` true if the email address passes a regular expression test
+#     * `autogen :` true if this is an automatically generated email address
+#     * `disposable :` true if this is an email address from a disposable email service
+#     * `webmail :` true if we find this is an email from a webmail, for example Gmail
+#     * `mx_records :` true if MX records exist on the domain of the given email address
+#     * `smtp_server :` true if connecting to the SMTP server was successful
+#     * `smtp_check :` true if the email address doesn't bounce
+#     * `smtp_check_blocked :` true if the SMTP server prevented the STMP check
+#     * `smtp_accept_all :` true if the SMTP server accepts all the email addresses; this can result in false positives on SMTP checks
 # ---
 
 import json

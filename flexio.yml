@@ -4,6 +4,8 @@ image:
   src: https://logo.clearbit.com/hunter.io
   alt: Hunter logo
 functions:
+  - path: hunter-enrich-org.py
+  - path: hunter-enrich-people.py
   - path: hunter-verify-email.py
 prompts:
   - element: form

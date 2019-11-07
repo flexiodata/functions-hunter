@@ -1,22 +1,29 @@
 
 # ---
-# name: hunter-enrich-org
+# name: hunter-enrich-people
 # deployed: true
-# title: Hunter Organization Enrichment
-# description: Returns a set of data about the organization, the email addresses found and additional information about the people owning those email addresses.
+# title: Hunter People Enrichment
+# description: Return the professional email of this person and a confidence score.
 # params:
 #   - name: domain
 #     type: string
-#     description: The domain name from which you want to find the domain addresses. For example, "stripe.com".
+#     description: The domain name from which you want to find the email address. For example, "asana.com".
+#     required: true
+#   - name: first_name
+#     type: string
+#     description: The person's first name. It doesn't need to be in lowercase.
+#     required: true
+#   - name: last_name
+#     type: string
+#     description: The person's last name. It doesn't need to be in lowercase.
 #     required: true
 #   - name: properties
 #     type: array
 #     description: The properties to return (defaults to 'email'). See "Notes" for a listing of the available properties.
 #     required: false
 # examples:
-#   - '"intercom.io"'
-#   - '"intercom.io", "organization, first_name, last_name, email"'
-#   - '"intercom.io", "first_name, last_name, email, linkedin, twitter"'
+#   - '"asana.com", "Dustin", "Moskovitz"'
+#   - '"asana.com", "Dustin", "Moskovitz", "email, organization, linkedin"'
 # notes: |
 #   The following properties are allowed:
 #     * `organization`: name of the organization associated with the specifed domain
@@ -65,7 +72,9 @@ def flexio_handler(flex):
     # based on the positions of the keys/values
     params = OrderedDict()
     params['domain'] = {'required': True, 'type': 'string'}
-    params['properties'] = {'required': False, 'validator': validator_list, 'coerce': to_list, 'default': 'email'}
+    params['first_name'] = {'required': True, 'type': 'string'}
+    params['last_name'] = {'required': True, 'type': 'string'}
+    params['properties'] = {'required': False, 'validator': validator_list, 'coerce': to_list, 'default': 'score'}
     input = dict(zip(params.keys(), input))
 
     # validate the mapped input against the validator
@@ -78,13 +87,15 @@ def flexio_handler(flex):
     try:
 
         # see here for more info:
-        # https://hunter.io/api/docs#domain-verifier
+        # https://hunter.io/api/docs#email-verifier
         url_query_params = {
             'domain': input['domain'],
+            'first_name': input['first_name'],
+            'last_name': input['last_name'],
             'api_key': auth_token
         }
         url_query_str = urllib.parse.urlencode(url_query_params)
-        url = 'https://api.hunter.io/v2/domain-search?' + url_query_str
+        url = 'https://api.hunter.io/v2/email-finder?' + url_query_str
 
         # get the response data as a JSON object
         response = requests.get(url)
@@ -94,31 +105,24 @@ def flexio_handler(flex):
         # map this function's property names to the API's property names
         properties = [p.lower().strip() for p in input['properties']]
         property_map = {
-            'organization': lambda item: content.get('organization', ''),
-            'domain': lambda item: content.get('domain', ''),
-            'email_disposable': lambda item: content.get('disposable', ''),
-            'email_webmail': lambda item: content.get('webmail', ''),
-            'first_name': lambda item: item.get('first_name', ''),
-            'last_name': lambda item: item.get('last_name', ''),
-            'email': lambda item: item.get('value', ''),
-            'email_type': lambda item: item.get('type', ''),
-            'email_score': lambda item: item.get('confidence', ''),
-            'phone': lambda item: item.get('phone_number', ''),
-            'position': lambda item: item.get('position', ''),
-            'seniority': lambda item: item.get('seniority', ''),
-            'department': lambda item: item.get('department', ''),
-            'linkedin': lambda item: item.get('linkedin', ''),
-            'twitter': lambda item: item.get('twitter', '')
+            'organization': content.get('company', ''),
+            'domain': content.get('domain', ''),
+            'first_name': content.get('first_name', ''),
+            'last_name': content.get('last_name', ''),
+            'email': content.get('email', ''),
+            'email_score': content.get('score', ''),
+            'phone': content.get('phone_number', ''),
+            'position': content.get('position', ''),
+            'linkedin': content.get('linkedin_url', ''),
+            'twitter': content.get('twitter', '')
         }
 
-        # build up the result
-        result = []
+        # map this function's property names to the API's property names
+        properties_iter = map(lambda prop : property_map.get(prop, ''), properties)
+        properties_list = list(properties_iter)
 
-        result.append(properties)
-        emails = content.get('emails',[])
-        for item in emails:
-            row = [property_map.get(p, lambda item: '')(item) for p in properties]
-            result.append(row)
+        # limit the results to the requested properties
+        result = [properties_list]
 
         # return the results
         result = json.dumps(result, default=to_string)

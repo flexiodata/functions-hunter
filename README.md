@@ -1,4 +1,4 @@
-# Hunter Google Sheets & Excel Spreadsheet Add on
+# Hunter Google Sheets & Excel Spreadsheet Add-on
 
 Hunter helps you find and verify professional email addresses. This Hunter spreadsheet integration for Google Sheets and Microsoft Excel enables you to import contact information from Hunter. This add-on will enable you to integrate on-demand, refreshable identify data without leaving your spreadsheet.
 

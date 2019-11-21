@@ -1,12 +1,12 @@
-# Hunter Spreadsheet Functions
+# Hunter Google Sheets & Excel Spreadsheet Add on
 
-Hunter Spreadsheet Functions enable you to get lists of emails for an organization in a spreadsheet using information from [Hunter](https://hunter.io/).
+Hunter helps you find and verify professional email addresses. This Hunter spreadsheet integration for Google Sheets and Microsoft Excel enables you to import contact information from Hunter. This add-on will enable you to integrate on-demand, refreshable identify data without leaving your spreadsheet.
 
-For example, you can:
+For example, with this Excel and Google Sheets add-on you can:
 
-* Get a set of data about the organization, the email addresses found and additional information about the people owning those email addresses
-* Get the professional email of a person and a confidence score
-* Get an email delivery verification and confidence score
+* Extract a set of data about the organization, the email addresses found and additional information about the people owning those email addresses.
+* Extract the professional email of a person and a confidence score.
+* Import an email delivery verification and confidence score.
 
 ## Prerequisites
 

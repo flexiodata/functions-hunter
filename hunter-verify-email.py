@@ -11,7 +11,7 @@
 #     required: true
 #   - name: properties
 #     type: array
-#     description: The properties to return (defaults to 'score'). See "Notes" for a listing of the available properties.
+#     description: The properties to return (defaults to all properties). See "Notes" for a listing of the available properties.
 #     required: false
 # examples:
 #   - '"steli@close.io"'
@@ -19,7 +19,7 @@
 #   - '"steli@close.io", "score, status, autogen, disposable"'
 # notes: |
 #   The following properties are available:
-#     * `score`: the deliverability score of the email address (default)
+#     * `score`: the deliverability score of the email address
 #     * `status`: "deliverable", "undeliverable", "risky"
 #     * `regexp`: true if the email address passes a regular expression test
 #     * `autogen`: true if this is an automatically generated email address
@@ -62,7 +62,7 @@ def flexio_handler(flex):
     # based on the positions of the keys/values
     params = OrderedDict()
     params['email'] = {'required': True, 'type': 'string'}
-    params['properties'] = {'required': False, 'validator': validator_list, 'coerce': to_list, 'default': 'score'}
+    params['properties'] = {'required': False, 'validator': validator_list, 'coerce': to_list, 'default': '*'}
     input = dict(zip(params.keys(), input))
 
     # validate the mapped input against the validator
@@ -71,6 +71,27 @@ def flexio_handler(flex):
     input = v.validated(input)
     if input is None:
         raise ValueError
+
+    # map this function's property names to the API's property names
+    property_map = OrderedDict()
+    property_map['score'] = 'score'
+    property_map['status'] = 'result'
+    property_map['regexp'] = 'regexp'
+    property_map['autogen'] = 'gibberish'
+    property_map['disposable'] = 'disposable'
+    property_map['webmail'] = 'webmail'
+    property_map['mx_records'] = 'mx_records'
+    property_map['smtp_server'] = 'smtp_server'
+    property_map['smtp_check'] = 'smtp_check'
+    property_map['smtp_check_blocked'] = 'block'
+    property_map['smtp_accept_all'] = 'accept_all'
+
+    # get the properties to return and the property map
+    properties = [p.lower().strip() for p in input['properties']]
+
+    # if we have a wildcard, get all the properties
+    if len(properties) == 1 and properties[0] == '*':
+        properties = list(property_map.keys())
 
     try:
 
@@ -85,31 +106,12 @@ def flexio_handler(flex):
 
         # get the response data as a JSON object
         response = requests.get(url)
+        response.raise_for_status()
         content = response.json()
         content = content.get('data', {})
 
-        # map this function's property names to the API's property names
-        properties = [p.lower().strip() for p in input['properties']]
-        property_map = {
-            'score': content.get('score', ''),
-            'status': content.get('result', ''),
-            'regexp': content.get('regexp', ''),
-            'autogen': content.get('gibberish', ''),
-            'disposable': content.get('disposable', ''),
-            'webmail': content.get('webmail', ''),
-            'mx_records': content.get('mx_records', ''),
-            'smtp_server': content.get('smtp_server', ''),
-            'smtp_check': content.get('smtp_check', ''),
-            'smtp_check_blocked': content.get('block', ''),
-            'smtp_accept_all': content.get('accept_all', '')
-        }
-
-        # map this function's property names to the API's property names
-        properties_iter = map(lambda prop : property_map.get(prop, ''), properties)
-        properties_list = list(properties_iter)
-
-        # limit the results to the requested properties
-        result = [properties_list]
+        # get the properties
+        result = [content.get(property_map.get(p,''),'') for p in properties] # don't use "or '' for p in properties" because result can be true/false
 
         # return the results
         result = json.dumps(result, default=to_string)
@@ -117,7 +119,8 @@ def flexio_handler(flex):
         flex.output.write(result)
 
     except:
-        raise RuntimeError
+        flex.output.content_type = 'application/json'
+        flex.output.write([['']])
 
 def debug_properties_map():
     properties_iter = map(lambda prop : prop + ' => ' + properties_map.get(prop, ''), properties_map)

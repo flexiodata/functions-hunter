@@ -11,7 +11,7 @@
 #     required: true
 #   - name: properties
 #     type: array
-#     description: The properties to return (defaults to 'email'). See "Notes" for a listing of the available properties.
+#     description: The properties to return (defaults to all properties). See "Notes" for a listing of the available properties.
 #     required: false
 # examples:
 #   - '"intercom.io"'
@@ -23,7 +23,7 @@
 #     * `domain`: domain name of the organization
 #     * `first_name`: first name of the person
 #     * `last_name`: last name of the person
-#     * `email`: email address of the person (default)
+#     * `email`: email address of the person
 #     * `email_disposable`: true if this is an domain address from a disposable domain service
 #     * `email_webmail`: true if we find this is an domain from a webmail, for example Gmail
 #     * `email_score`: estimation of the probability the email address returned is correct
@@ -65,7 +65,7 @@ def flexio_handler(flex):
     # based on the positions of the keys/values
     params = OrderedDict()
     params['domain'] = {'required': True, 'type': 'string'}
-    params['properties'] = {'required': False, 'validator': validator_list, 'coerce': to_list, 'default': 'email'}
+    params['properties'] = {'required': False, 'validator': validator_list, 'coerce': to_list, 'default': '*'}
     input = dict(zip(params.keys(), input))
 
     # validate the mapped input against the validator
@@ -74,6 +74,31 @@ def flexio_handler(flex):
     input = v.validated(input)
     if input is None:
         raise ValueError
+
+    # map this function's property names to the API's property names
+    property_map = OrderedDict()
+    property_map['organization'] = 'organization'
+    property_map['domain'] = 'domain'
+    property_map['email_disposable'] = 'disposable'
+    property_map['email_webmail'] = 'webmail'
+    property_map['first_name'] = 'first_name'
+    property_map['last_name'] = 'last_name'
+    property_map['email'] = 'value'
+    property_map['email_type'] = 'type'
+    property_map['email_score'] = 'confidence'
+    property_map['phone'] = 'phone_number'
+    property_map['position'] = 'position'
+    property_map['seniority'] = 'seniority'
+    property_map['department'] = 'department'
+    property_map['linkedin'] = 'linkedin'
+    property_map['twitter'] = 'twitter'
+
+    # get the properties to return and the property map
+    properties = [p.lower().strip() for p in input['properties']]
+
+    # if we have a wildcard, get all the properties
+    if len(properties) == 1 and properties[0] == '*':
+        properties = list(property_map.keys())
 
     try:
 
@@ -88,36 +113,24 @@ def flexio_handler(flex):
 
         # get the response data as a JSON object
         response = requests.get(url)
+        response.raise_for_status()
         content = response.json()
         content = content.get('data', {})
 
-        # map this function's property names to the API's property names
-        properties = [p.lower().strip() for p in input['properties']]
-        property_map = {
-            'organization': lambda item: content.get('organization', ''),
-            'domain': lambda item: content.get('domain', ''),
-            'email_disposable': lambda item: content.get('disposable', ''),
-            'email_webmail': lambda item: content.get('webmail', ''),
-            'first_name': lambda item: item.get('first_name', ''),
-            'last_name': lambda item: item.get('last_name', ''),
-            'email': lambda item: item.get('value', ''),
-            'email_type': lambda item: item.get('type', ''),
-            'email_score': lambda item: item.get('confidence', ''),
-            'phone': lambda item: item.get('phone_number', ''),
-            'position': lambda item: item.get('position', ''),
-            'seniority': lambda item: item.get('seniority', ''),
-            'department': lambda item: item.get('department', ''),
-            'linkedin': lambda item: item.get('linkedin', ''),
-            'twitter': lambda item: item.get('twitter', '')
-        }
+        header_info = {}
+        header_info['domain'] = content.get('domain','')
+        header_info['disposable'] = content.get('disposable','')
+        header_info['webmail'] = content.get('webmail','')
+        header_info['pattern'] = content.get('pattern','')
+        header_info['organization'] = content.get('organization','')
 
         # build up the result
         result = []
-
         result.append(properties)
         emails = content.get('emails',[])
-        for item in emails:
-            row = [property_map.get(p, lambda item: '')(item) for p in properties]
+        for detail_info in emails:
+            item = {**header_info, **detail_info}
+            row = [item.get(property_map.get(p,''),'') or '' for p in properties]
             result.append(row)
 
         # return the results
@@ -126,7 +139,8 @@ def flexio_handler(flex):
         flex.output.write(result)
 
     except:
-        raise RuntimeError
+        flex.output.content_type = 'application/json'
+        flex.output.write([['']])
 
 def validator_list(field, value, error):
     if isinstance(value, str):

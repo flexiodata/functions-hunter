@@ -19,27 +19,21 @@
 #     required: true
 #   - name: properties
 #     type: array
-#     description: The properties to return (defaults to 'email'). See "Notes" for a listing of the available properties.
+#     description: The properties to return (defaults to all properties). See "Notes" for a listing of the available properties.
 #     required: false
 # examples:
 #   - '"asana.com", "Dustin", "Moskovitz"'
-#   - '"asana.com", "Dustin", "Moskovitz", "email, organization, linkedin"'
+#   - '"asana.com", "Dustin", "Moskovitz", "email, organization"'
 # notes: |
 #   The following properties are allowed:
 #     * `organization`: name of the organization associated with the specifed domain
 #     * `domain`: domain name of the organization
 #     * `first_name`: first name of the person
 #     * `last_name`: last name of the person
-#     * `email`: email address of the person (default)
-#     * `email_disposable`: true if this is an domain address from a disposable domain service
-#     * `email_webmail`: true if we find this is an domain from a webmail, for example Gmail
+#     * `email`: email address of the person
 #     * `email_score`: estimation of the probability the email address returned is correct
 #     * `phone`: phone number of the person
 #     * `position`: position of the person in the organization
-#     * `seniority`: seniority level of the person in the organization
-#     * `department`: department of the person in the organization
-#     * `linkedin`: username of the person on LinkedIn
-#     * `twitter`: username of the person on Twitter
 # ---
 
 import json
@@ -74,7 +68,7 @@ def flexio_handler(flex):
     params['domain'] = {'required': True, 'type': 'string'}
     params['first_name'] = {'required': True, 'type': 'string'}
     params['last_name'] = {'required': True, 'type': 'string'}
-    params['properties'] = {'required': False, 'validator': validator_list, 'coerce': to_list, 'default': 'score'}
+    params['properties'] = {'required': False, 'validator': validator_list, 'coerce': to_list, 'default': '*'}
     input = dict(zip(params.keys(), input))
 
     # validate the mapped input against the validator
@@ -83,6 +77,24 @@ def flexio_handler(flex):
     input = v.validated(input)
     if input is None:
         raise ValueError
+
+    # map this function's property names to the API's property names
+    property_map = OrderedDict()
+    property_map['organization'] = 'company'
+    property_map['domain'] = 'domain'
+    property_map['first_name'] = 'first_name'
+    property_map['last_name'] = 'last_name'
+    property_map['email'] = 'email'
+    property_map['email_score'] = 'score'
+    property_map['phone'] = 'phone_number'
+    property_map['position'] = 'position'
+
+    # get the properties to return and the property map
+    properties = [p.lower().strip() for p in input['properties']]
+
+    # if we have a wildcard, get all the properties
+    if len(properties) == 1 and properties[0] == '*':
+        properties = list(property_map.keys())
 
     try:
 
@@ -99,30 +111,12 @@ def flexio_handler(flex):
 
         # get the response data as a JSON object
         response = requests.get(url)
+        response.raise_for_status()
         content = response.json()
         content = content.get('data', {})
 
-        # map this function's property names to the API's property names
-        properties = [p.lower().strip() for p in input['properties']]
-        property_map = {
-            'organization': content.get('company', ''),
-            'domain': content.get('domain', ''),
-            'first_name': content.get('first_name', ''),
-            'last_name': content.get('last_name', ''),
-            'email': content.get('email', ''),
-            'email_score': content.get('score', ''),
-            'phone': content.get('phone_number', ''),
-            'position': content.get('position', ''),
-            'linkedin': content.get('linkedin_url', ''),
-            'twitter': content.get('twitter', '')
-        }
-
-        # map this function's property names to the API's property names
-        properties_iter = map(lambda prop : property_map.get(prop, ''), properties)
-        properties_list = list(properties_iter)
-
-        # limit the results to the requested properties
-        result = [properties_list]
+        # get the properties
+        result = [content.get(property_map.get(p,''),'') or '' for p in properties]
 
         # return the results
         result = json.dumps(result, default=to_string)
@@ -130,7 +124,8 @@ def flexio_handler(flex):
         flex.output.write(result)
 
     except:
-        raise RuntimeError
+        flex.output.content_type = 'application/json'
+        flex.output.write([['']])
 
 def validator_list(field, value, error):
     if isinstance(value, str):

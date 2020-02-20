@@ -11,25 +11,46 @@
 #     required: true
 #   - name: properties
 #     type: array
-#     description: The properties to return (defaults to all properties). See "Notes" for a listing of the available properties.
+#     description: The properties to return (defaults to all properties). See "Returns" for a listing of the available properties.
 #     required: false
+# returns:
+#   - name: score
+#     type: string
+#     description: The deliverability score of the email address
+#   - name: status
+#     type: string
+#     description: The status; one of: "deliverable", "undeliverable", "risky"
+#   - name: regexp
+#     type: string
+#     description: True if the email address passes a regular expression test
+#   - name: autogen
+#     type: string
+#     description: True if this is an automatically generated email address
+#   - name: disposable
+#     type: string
+#     description: True if this is an email address from a disposable email service
+#   - name: webmail
+#     type: string
+#     description: True if we find this is an email from a webmail, for example Gmail
+#   - name: mx_records
+#     type: string
+#     description: True if MX records exist on the domain of the given email address
+#   - name: smtp_server
+#     type: string
+#     description: True if connecting to the SMTP server was successful
+#   - name: smtp_check
+#     type: string
+#     description: True if the email address doesn't bounce
+#   - name: smtp_check_blocked
+#     type: string
+#     description: True if the SMTP server prevented the STMP check
+#   - name: smtp_accept_all
+#     type: string
+#     description: True if the SMTP server accepts all the email addresses; this can result in false positives on SMTP checks
 # examples:
 #   - '"steli@close.io"'
 #   - '"steli@close.io", "score, status, webmail"'
 #   - '"steli@close.io", "score, status, autogen, disposable"'
-# notes: |
-#   The following properties are available:
-#     * `score`: the deliverability score of the email address
-#     * `status`: "deliverable", "undeliverable", "risky"
-#     * `regexp`: true if the email address passes a regular expression test
-#     * `autogen`: true if this is an automatically generated email address
-#     * `disposable`: true if this is an email address from a disposable email service
-#     * `webmail`: true if we find this is an email from a webmail, for example Gmail
-#     * `mx_records`: true if MX records exist on the domain of the given email address
-#     * `smtp_server`: true if connecting to the SMTP server was successful
-#     * `smtp_check`: true if the email address doesn't bounce
-#     * `smtp_check_blocked`: true if the SMTP server prevented the STMP check
-#     * `smtp_accept_all`: true if the SMTP server accepts all the email addresses; this can result in false positives on SMTP checks
 # ---
 
 import json

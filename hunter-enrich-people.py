@@ -19,21 +19,36 @@
 #     required: true
 #   - name: properties
 #     type: array
-#     description: The properties to return (defaults to all properties). See "Notes" for a listing of the available properties.
+#     description: The properties to return (defaults to all properties). See "Returns" for a listing of the available properties.
 #     required: false
+# returns:
+#   - name: organization
+#     type: string
+#     description: The name of the organization associated with the specifed domain
+#   - name: domain
+#     type: string
+#     description: The domain name of the organization
+#   - name: first_name
+#     type: string
+#     description: The first name of the person
+#   - name: last_name
+#     type: string
+#     description: The last name of the person
+#   - name: email
+#     type: string
+#     description: The email address of the person
+#   - name: email_score
+#     type: string
+#     description: An estimation of the probability the email address returned is correct
+#   - name: phone
+#     type: string
+#     description: The phone number of the person
+#   - name: position
+#     type: string
+#     description: The position of the person in the organization
 # examples:
 #   - '"asana.com", "Dustin", "Moskovitz"'
 #   - '"asana.com", "Dustin", "Moskovitz", "email, organization"'
-# notes: |
-#   The following properties are allowed:
-#     * `organization`: name of the organization associated with the specifed domain
-#     * `domain`: domain name of the organization
-#     * `first_name`: first name of the person
-#     * `last_name`: last name of the person
-#     * `email`: email address of the person
-#     * `email_score`: estimation of the probability the email address returned is correct
-#     * `phone`: phone number of the person
-#     * `position`: position of the person in the organization
 # ---
 
 import json

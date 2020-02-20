@@ -19,7 +19,7 @@
 #     description: The deliverability score of the email address
 #   - name: status
 #     type: string
-#     description: The status; one of: `deliverable`, `undeliverable`, `risky`
+#     description: The status; one of **deliverable**, **undeliverable**, or **risky**
 #   - name: regexp
 #     type: string
 #     description: True if the email address passes a regular expression test

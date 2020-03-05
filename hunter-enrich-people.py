@@ -131,7 +131,7 @@ def flexio_handler(flex):
         content = content.get('data', {})
 
         # get the properties
-        result = [content.get(property_map.get(p,''),'') or '' for p in properties]
+        result = [[content.get(property_map.get(p,''),'') or '' for p in properties]]
 
         # return the results
         result = json.dumps(result, default=to_string)

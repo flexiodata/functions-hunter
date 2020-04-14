@@ -7,16 +7,27 @@ functions:
   - path: hunter-enrich-org.py
   - path: hunter-enrich-people.py
   - path: hunter-verify-email.py
+
 templates:
-  - title: Verify an Email List
-    gsheets_spreadsheet_id: 1SeUn1PwdnqJbLpi7-MXznjCXDN9We3HMXdvyynBIsrs
-    excel_path: ''
-  - title: Lookup Email Addresses for a List of People
-    gsheets_spreadsheet_id: 16gGIVz3I-W8LZ7FAuekWotv5TKp4nv6xkQ_upjDsAbg
-    excel_path: ''
-  - title: Find Email Addresses at a Company
+  - title: Find email addresses at a company
+    description: 'Get a list of email addresses and email confidence scores for a company'
     gsheets_spreadsheet_id: 168vaaxTIsWhLYIzwhIIycfnTD6BoxNlYWPPxLpozKG0
     excel_path: ''
+    in_production: true
+    in_staging: false    
+  - title: Lookup email addresses for a list of people
+    description: 'Find the email addresses and the email confidence scores for a list of people'
+    gsheets_spreadsheet_id: 16gGIVz3I-W8LZ7FAuekWotv5TKp4nv6xkQ_upjDsAbg
+    excel_path: ''
+    in_production: true
+    in_staging: false     
+  - title: Verify a list of email addresses
+    description: 'Lookup the status and confidence scores for a list of email addresses'
+    gsheets_spreadsheet_id: 1SeUn1PwdnqJbLpi7-MXznjCXDN9We3HMXdvyynBIsrs
+    excel_path: ''
+    in_production: true
+    in_staging: false    
+
 prompts:
   - element: form
     name: form_api_key

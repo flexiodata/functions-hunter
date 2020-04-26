@@ -3,6 +3,7 @@ description: Functions for accessing your Hunter info
 image:
   src: https://static.flex.io/assets/logos2/hunter.png
   alt: Hunter logo
+  
 functions:
   - path: hunter-enrich-org.py
   - path: hunter-enrich-people.py

@@ -10,21 +10,21 @@ functions:
 
 templates:
   - name: find-email-addresses-at-company    
-    title: Find email addresses at a company
+    title: 'Find email addresses at a company'
     description: 'Get a list of email addresses and email confidence scores for a company'
     gsheets_spreadsheet_id: 168vaaxTIsWhLYIzwhIIycfnTD6BoxNlYWPPxLpozKG0
     excel_spreadsheet_path: ''
     in_production: true
     in_staging: false
   - name: find-email-addresses-for-list-of-people
-    title: Find email addresses for a list of people
+    title: 'Find email addresses for a list of people'
     description: 'Lookup the email addresses and the email confidence scores for a list of people'
     gsheets_spreadsheet_id: 16gGIVz3I-W8LZ7FAuekWotv5TKp4nv6xkQ_upjDsAbg
     excel_spreadsheet_path: ''
     in_production: true
     in_staging: false
   - name: verify-list-of-email-addresses        
-    title: Verify a list of email addresses
+    title: 'Verify a list of email addresses'
     description: 'Lookup the status and confidence scores for a list of email addresses'
     gsheets_spreadsheet_id: 1SeUn1PwdnqJbLpi7-MXznjCXDN9We3HMXdvyynBIsrs
     excel_spreadsheet_path: ''

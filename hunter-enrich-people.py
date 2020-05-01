@@ -67,16 +67,12 @@ def flexio_handler(flex):
     # get the api key from the variable input
     auth_token = dict(flex.vars).get('hunter_api_key')
     if auth_token is None:
-        flex.output.content_type = "application/json"
-        flex.output.write([[""]])
-        return
+        raise ValueError
 
     # get the input
     input = flex.input.read()
-    try:
-        input = json.loads(input)
-        if not isinstance(input, list): raise ValueError
-    except ValueError:
+    input = json.loads(input)
+    if not isinstance(input, list):
         raise ValueError
 
     # define the expected parameters and map the values to the parameter names
@@ -106,43 +102,36 @@ def flexio_handler(flex):
     property_map['phone'] = 'phone_number'
     property_map['position'] = 'position'
 
-    # get the properties to return and the property map
-    properties = [p.lower().strip() for p in input['properties']]
-
+    # get the properties to return and the property map;
     # if we have a wildcard, get all the properties
-    if len(properties) == 1 and properties[0] == '*':
+    properties = [p.lower().strip() for p in input['properties']]
+    if len(properties) == 1 and (properties[0] == '' or properties[0] == '*'):
         properties = list(property_map.keys())
 
-    try:
+    # see here for more info:
+    # https://hunter.io/api/docs#email-verifier
+    url_query_params = {
+        'domain': input['domain'],
+        'first_name': input['first_name'],
+        'last_name': input['last_name'],
+        'api_key': auth_token
+    }
+    url_query_str = urllib.parse.urlencode(url_query_params)
+    url = 'https://api.hunter.io/v2/email-finder?' + url_query_str
 
-        # see here for more info:
-        # https://hunter.io/api/docs#email-verifier
-        url_query_params = {
-            'domain': input['domain'],
-            'first_name': input['first_name'],
-            'last_name': input['last_name'],
-            'api_key': auth_token
-        }
-        url_query_str = urllib.parse.urlencode(url_query_params)
-        url = 'https://api.hunter.io/v2/email-finder?' + url_query_str
+    # get the response data as a JSON object
+    response = requests_retry_session().get(url)
+    response.raise_for_status()
+    content = response.json()
+    content = content.get('data', {})
 
-        # get the response data as a JSON object
-        response = requests_retry_session().get(url)
-        response.raise_for_status()
-        content = response.json()
-        content = content.get('data', {})
+    # get the properties
+    result = [[content.get(property_map.get(p,''),'') or '' for p in properties]]
 
-        # get the properties
-        result = [[content.get(property_map.get(p,''),'') or '' for p in properties]]
-
-        # return the results
-        result = json.dumps(result, default=to_string)
-        flex.output.content_type = "application/json"
-        flex.output.write(result)
-
-    except:
-        flex.output.content_type = 'application/json'
-        flex.output.write([['']])
+    # return the results
+    result = json.dumps(result, default=to_string)
+    flex.output.content_type = "application/json"
+    flex.output.write(result)
 
 def requests_retry_session(
     retries=3,

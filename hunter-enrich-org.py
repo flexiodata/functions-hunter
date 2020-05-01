@@ -78,16 +78,12 @@ def flexio_handler(flex):
     # get the api key from the variable input
     auth_token = dict(flex.vars).get('hunter_api_key')
     if auth_token is None:
-        flex.output.content_type = "application/json"
-        flex.output.write([[""]])
-        return
+        raise ValueError
 
     # get the input
     input = flex.input.read()
-    try:
-        input = json.loads(input)
-        if not isinstance(input, list): raise ValueError
-    except ValueError:
+    input = json.loads(input)
+    if not isinstance(input, list):
         raise ValueError
 
     # define the expected parameters and map the values to the parameter names
@@ -95,6 +91,7 @@ def flexio_handler(flex):
     params = OrderedDict()
     params['domain'] = {'required': True, 'type': 'string'}
     params['properties'] = {'required': False, 'validator': validator_list, 'coerce': to_list, 'default': '*'}
+    params['config'] = {'required': False, 'type': 'string', 'default': ''} # index-styled config string
     input = dict(zip(params.keys(), input))
 
     # validate the mapped input against the validator
@@ -122,54 +119,64 @@ def flexio_handler(flex):
     property_map['linkedin'] = 'linkedin'
     property_map['twitter'] = 'twitter'
 
-    # get the properties to return and the property map
-    properties = [p.lower().strip() for p in input['properties']]
-
+    # get the properties to return and the property map;
     # if we have a wildcard, get all the properties
-    if len(properties) == 1 and properties[0] == '*':
+    properties = [p.lower().strip() for p in input['properties']]
+    if len(properties) == 1 and (properties[0] == '' or properties[0] == '*'):
         properties = list(property_map.keys())
 
-    try:
+    # get any configuration settings
+    config = urllib.parse.parse_qs(input['config'])
+    config = {k: v[0] for k, v in config.items()}
+    limit = int(config.get('limit', 100))
+    headers = config.get('headers', 'true').lower()
+    if headers == 'true':
+        headers = True
+    else:
+        headers = False
 
-        # see here for more info:
-        # https://hunter.io/api/docs#domain-verifier
-        url_query_params = {
-            'domain': input['domain'],
-            'api_key': auth_token
-        }
-        url_query_str = urllib.parse.urlencode(url_query_params)
-        url = 'https://api.hunter.io/v2/domain-search?' + url_query_str
+    # see here for more info:
+    # https://hunter.io/api/docs#domain-verifier
+    url_query_params = {
+        'domain': input['domain'],
+        'api_key': auth_token
+    }
+    url_query_str = urllib.parse.urlencode(url_query_params)
+    url = 'https://api.hunter.io/v2/domain-search?' + url_query_str
 
-        # get the response data as a JSON object
-        response = requests_retry_session().get(url)
-        response.raise_for_status()
-        content = response.json()
-        content = content.get('data', {})
+    # get the response data as a JSON object
+    response = requests_retry_session().get(url)
+    response.raise_for_status()
+    content = response.json()
+    content = content.get('data', {})
 
-        header_info = {}
-        header_info['domain'] = content.get('domain','')
-        header_info['disposable'] = content.get('disposable','')
-        header_info['webmail'] = content.get('webmail','')
-        header_info['pattern'] = content.get('pattern','')
-        header_info['organization'] = content.get('organization','')
+    header_info = {}
+    header_info['domain'] = content.get('domain','')
+    header_info['disposable'] = content.get('disposable','')
+    header_info['webmail'] = content.get('webmail','')
+    header_info['pattern'] = content.get('pattern','')
+    header_info['organization'] = content.get('organization','')
 
-        # build up the result
-        result = []
+    # build up the result
+    result = []
+
+    if headers is True:
         result.append(properties)
-        emails = content.get('emails',[])
-        for detail_info in emails:
-            item = {**header_info, **detail_info}
-            row = [item.get(property_map.get(p,''),'') or '' for p in properties]
-            result.append(row)
 
-        # return the results
-        result = json.dumps(result, default=to_string)
-        flex.output.content_type = "application/json"
-        flex.output.write(result)
+    idx = 0
+    emails = content.get('emails',[])
+    for detail_info in emails:
+        if idx >= limit:
+            break
+        item = {**header_info, **detail_info}
+        row = [item.get(property_map.get(p,''),'') or '' for p in properties]
+        result.append(row)
+        idx = idx + 1
 
-    except:
-        flex.output.content_type = 'application/json'
-        flex.output.write([['']])
+    # return the results
+    result = json.dumps(result, default=to_string)
+    flex.output.content_type = "application/json"
+    flex.output.write(result)
 
 def requests_retry_session(
     retries=3,
